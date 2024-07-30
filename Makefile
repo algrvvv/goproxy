@@ -3,9 +3,9 @@ format:
 
 build:
 	@mkdir -p bin/
-	@go build -o bin/checks cmd/checks/main.go
+	@go build -o bin/goproxy main.go
 
 run: build
-	@./bin/checks
+	@./bin/goproxy
 
 dev: format build run
