@@ -28,6 +28,8 @@ go.work.sum
 
 # Enviroment
 .env
+config.yaml
 
-# Log files
+# Other files
 *.log
+.certs/
