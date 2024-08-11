@@ -1,7 +1,6 @@
-# GoProxy
+# GoProxy - Simple proxy server in golang
 
 ![GoProxy](https://i.imgur.com/uPDYT2n_d.webp?maxwidth=760&fidelity=grand)
-Simple proxy server in golang
 
 ### Installation
 
