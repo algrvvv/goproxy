@@ -28,7 +28,7 @@ esac
 echo "Select installation option :"
 echo "1) Clone repository"
 echo "2) Install the binary from the latest release"
-read -p "Enter number (1 или 2): " choice
+read -p "Enter number (1 or 2): " choice
 
 if [ "$choice" == "1" ]; then
     # --- Клонируем ---
@@ -37,7 +37,8 @@ if [ "$choice" == "1" ]; then
 
   # --- Делаем билд ---
   LOWER_OS=$(echo "$OS" | awk '{print tolower($0)}')
-  GOOS=$LOWER_OS GOARCH=$ARCH go build -o bin/goproxy cmd/goproxy/main.go
+  # GOOS=$LOWER_OS GOARCH=$ARCH
+  go build -o bin/goproxy cmd/goproxy/main.go
 
   START_LINE="For start proxy server use: cd goproxy && ./bin/goproxy"
 elif [ "$choice" == "2" ]; then
