@@ -3,11 +3,11 @@ package internal
 import (
 	"encoding/base64"
 	"fmt"
-	"io"
 	"log"
-	"net"
 	"net/http"
 	"strings"
+
+	"github.com/elazarl/goproxy"
 )
 
 type Server struct {
@@ -22,94 +22,60 @@ func (s *Server) authenticate(username, password string) bool {
 	return false
 }
 
-func (s *Server) basicAuth(r *http.Request) bool {
-	auth := r.Header.Get("Proxy-Authorization")
-	if auth == "" {
-		return false
-	}
+func (s *Server) proxyHandler(proxy *goproxy.ProxyHttpServer) {
+	proxy.OnRequest().HandleConnectFunc(func(host string, ctx *goproxy.ProxyCtx) (*goproxy.ConnectAction, string) {
+		auth := ctx.Req.Header.Get("Proxy-Authorization")
+		if auth == "" {
+			ctx.Resp = &http.Response{
+				StatusCode: http.StatusProxyAuthRequired,
+				Header:     make(http.Header),
+				Body:       http.NoBody,
+			}
+			ctx.Resp.Header.Set("Proxy-Authenticate", `Basic realm="Restricted"`)
+			return goproxy.RejectConnect, host
+		}
 
-	payload, err := base64.StdEncoding.DecodeString(strings.TrimPrefix(auth, "Basic "))
-	if err != nil {
-		return false
-	}
+		payload, err := base64.StdEncoding.DecodeString(strings.TrimPrefix(auth, "Basic "))
+		if err != nil {
+			return goproxy.RejectConnect, host
+		}
 
-	// получаем из username:password -> [0] -> username, [1] -> password
-	parts := strings.SplitN(string(payload), ":", 2)
-	if len(parts) != 2 || !s.authenticate(parts[0], parts[1]) {
-		return false
-	}
+		parts := strings.SplitN(string(payload), ":", 2)
+		if len(parts) != 2 || !s.authenticate(parts[0], parts[1]) {
+			return goproxy.RejectConnect, host
+		}
 
-	return true
-}
+		return goproxy.OkConnect, host
+	})
 
-func (s *Server) handleHTTP(w http.ResponseWriter, r *http.Request) {
-	if !s.basicAuth(r) {
-		w.Header().Set("Proxy-Authenticate", `Basic realm="Restricted"`)
-		http.Error(w, "Proxy authentication required", http.StatusProxyAuthRequired)
-		return
-	}
+	proxy.OnRequest().DoFunc(func(req *http.Request, ctx *goproxy.ProxyCtx) (*http.Request, *http.Response) {
+		auth := req.Header.Get("Proxy-Authorization")
+		if auth == "" {
+			resp := &http.Response{
+				StatusCode: http.StatusProxyAuthRequired,
+				Header:     make(http.Header),
+				Body:       http.NoBody,
+			}
+			resp.Header.Set("Proxy-Authenticate", `Basic realm="Restricted"`)
+			return req, resp
+		}
 
-	client := &http.Client{}
-	req, err := http.NewRequest(r.Method, r.URL.String(), r.Body)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
+		payload, err := base64.StdEncoding.DecodeString(strings.TrimPrefix(auth, "Basic "))
+		if err != nil {
+			return req, nil
+		}
 
-	req.Header = r.Header
-	resp, err := client.Do(req)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-	defer resp.Body.Close()
+		parts := strings.SplitN(string(payload), ":", 2)
+		if len(parts) != 2 || !s.authenticate(parts[0], parts[1]) {
+			return req, &http.Response{
+				StatusCode: http.StatusProxyAuthRequired,
+				Header:     make(http.Header),
+				Body:       http.NoBody,
+			}
+		}
 
-	for k, v := range resp.Header {
-		w.Header()[k] = v
-	}
-	w.WriteHeader(resp.StatusCode)
-	io.Copy(w, resp.Body)
-}
-
-func (s *Server) handleHTTPS(w http.ResponseWriter, r *http.Request) {
-	if !s.basicAuth(r) {
-		w.Header().Set("Proxy-Authenticate", `Basic realm="Restricted"`)
-		http.Error(w, "Proxy authentication required", http.StatusProxyAuthRequired)
-		return
-	}
-
-	hijacker, ok := w.(http.Hijacker)
-	if !ok {
-		http.Error(w, "hijacker not supported", http.StatusInternalServerError)
-		return
-	}
-
-	clientConn, _, err := hijacker.Hijack()
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-	defer clientConn.Close()
-
-	servConn, err := net.Dial("tcp", r.Host)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-	defer servConn.Close()
-
-	clientConn.Write([]byte("HTTP/1.1 200 Connection Established\r\n\r\n"))
-
-	go io.Copy(servConn, clientConn)
-	io.Copy(clientConn, servConn)
-}
-
-func (s *Server) handleProxy(w http.ResponseWriter, r *http.Request) {
-	if r.Method == http.MethodConnect {
-		s.handleHTTPS(w, r)
-	} else {
-		s.handleHTTP(w, r)
-	}
+		return req, nil
+	})
 }
 
 func NewServer() (*Server, error) {
@@ -129,7 +95,12 @@ func NewServer() (*Server, error) {
 }
 
 func (s *Server) Run() {
-	http.HandleFunc("/", s.handleProxy)
+	proxy := goproxy.NewProxyHttpServer()
+	proxy.Verbose = true
+	s.proxyHandler(proxy)
+
 	log.Println("Starting proxy server on " + s.port)
-	log.Fatal(http.ListenAndServe(s.port, nil))
+	if err := http.ListenAndServe(s.port, proxy); err != nil {
+		log.Fatal(err)
+	}
 }
