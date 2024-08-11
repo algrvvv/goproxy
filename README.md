@@ -1,11 +1,28 @@
-# goproxy
-Попытка реализовать простой прокси сервера на го
+# GoProxy
 
-### Установка
+![GoProxy](https://i.imgur.com/uPDYT2n_d.webp?maxwidth=760&fidelity=grand)
+Simple proxy server in golang
 
-> В данный момент работает только первый вариант установки, если использовать sh установщик
+### Installation
+
+The installation has two options:
+
+1. clone the repository and make a build
+2. install the binary for your system. Exceptions: macOS
 
 ```shell
-curl -LO https://raw.githubusercontent.com/algrvvv/goproxy/main/install.sh
-chmod +x install.sh
+# download the installer
+$ curl -LO https://raw.githubusercontent.com/algrvvv/goproxy/main/install.sh
+# make the file executable
+$ chmod +x install.sh
+# start the installation
+$ ./install.sh
+```
+
+After installation, edit `config.yaml` to suit your needs and start the server:
+```shell
+# if you chose the first installation option
+$ ./bin/goproxy
+# if you chose the first installation option
+$ ./goproxy
 ```
