@@ -9,14 +9,14 @@ ARCH=$(uname -m)
 
 case "$OS" in
     Linux)
-        BIN_FILE="linux_bin"
+        BIN_FILE="linux_goproxy"
         ;;
     Darwin)
       echo "To install on your OS, use the first installation option or clone the repository yourself and run the build"
       BIN_FILE="err"
         ;;
     CYGWIN*|MINGW32*|MSYS*|MINGW*)
-        BIN_FILE="win_bin.exe"
+        BIN_FILE="windows_goproxy.exe"
         ;;
     *)
         echo "Error: unsupported os - $OS"
