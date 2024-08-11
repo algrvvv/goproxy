@@ -19,6 +19,7 @@ $ ./install.sh
 ```
 
 After installation, edit `config.yaml` to suit your needs and start the server:
+
 ```shell
 # if you chose the first installation option
 $ ./bin/goproxy
@@ -28,4 +29,5 @@ $ ./goproxy
 
 ### Additions
 
-in addition, you can view a [browser extension](https://github.com/algrvvv/goproxy) that can be used in conjunction with this proxy server
+in addition, you can view a [browser extension](https://github.com/algrvvv/goproxy-ext) that can be used in conjunction
+with this proxy server
