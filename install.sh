@@ -36,7 +36,7 @@ if [ "$choice" == "1" ]; then
   cd goproxy
 
   # --- Делаем билд ---
-  LOWER_OS=$(echo "$OS" | awk '{print tolower($0)}')
+  # LOWER_OS=$(echo "$OS" | awk '{print tolower($0)}')
   # GOOS=$LOWER_OS GOARCH=$ARCH
   go build -o bin/goproxy cmd/goproxy/main.go
 
@@ -57,13 +57,13 @@ elif [ "$choice" == "2" ]; then
 
   # --- Установка ---
   echo "Downloading the latest release..."
-  curl -LO $LATEST_RELEASE_URL
+  curl -Lo goproxy $LATEST_RELEASE_URL
 
   if [ "$OS" != "CYGWIN" ] && [ "$OS" != "MINGW32" ] && [ "$OS" != "MSYS" ] && [ "$OS" != "MINGW" ]; then
-    chmod +x $BIN_FILE
+    chmod +x goproxy
   fi
 
-  START_LINE="For start proxy server use: ./$BIN_FILE"
+  START_LINE="For start proxy server use: ./goproxy"
 else
   echo "Error: wrong installation option"
   exit 1
