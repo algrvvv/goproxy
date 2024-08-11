@@ -25,3 +25,7 @@ $ ./bin/goproxy
 # if you chose the first installation option
 $ ./goproxy
 ```
+
+### Additions
+
+in addition, you can view a [browser extension](https://github.com/algrvvv/goproxy) that can be used in conjunction with this proxy server
