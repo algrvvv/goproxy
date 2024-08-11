@@ -131,4 +131,5 @@ func NewServer() (*Server, error) {
 func (s *Server) Run() {
 	http.HandleFunc("/", s.handleProxy)
 	log.Println("Starting proxy server on " + s.port)
+	log.Fatal(http.ListenAndServe(s.port, nil))
 }
