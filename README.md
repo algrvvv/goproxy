@@ -23,7 +23,7 @@ After installation, edit `config.yaml` to suit your needs and start the server:
 ```shell
 # if you chose the first installation option
 $ ./bin/goproxy
-# if you chose the first installation option
+# if you chose the second installation option
 $ ./goproxy
 ```
 
